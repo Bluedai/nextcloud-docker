@@ -1,0 +1,63 @@
+version: '3.9'
+services:
+  mysql:
+    build:
+      context: ./mysql/Files
+      dockerfile: Dockerfile
+    volumes:
+      - ./mysql/Files/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - ./mysql/Files/openssl.cnf:/etc/ssl/openssl.cnf
+      - ./mysql/Volumes/conf.d:/etc/mysql/conf.d
+      - ${ProjectVolumes}/mysql/tablespace/:/var/lib/mysql
+    restart: always
+    #ports:
+    #  - "${Pmysql}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${mysql_root_passwort}
+      MYSQL_USER: ${mysql_admin_user}
+      MYSQL_PASSWORD: ${mysql_admin_passwort}
+    command: --innodb-page-size=32K
+    networks:
+      - netzwerk
+  nginx:
+    image: nginx:1.15-alpine
+    restart: unless-stopped
+    volumes:
+      - ${ProjectVolumes}/nginx-certbot/data/nginx:/etc/nginx/conf.d
+      - ${ProjectVolumes}/nginx-certbot/data/certbot/conf:/etc/letsencrypt
+      - ${ProjectVolumes}/nginx-certbot/data/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - netzwerk
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ${ProjectVolumes}/nginx-certbot/data/certbot/conf:/etc/letsencrypt
+      - ${ProjectVolumes}/nginx-certbot/data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - netzwerk
+  nextcloud:
+    image: nextcloud
+    restart: always
+    depends_on:
+      - mysql
+    volumes:
+      - ${ProjectVolumes}/nextcloud/html:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=${mysql_nextcloud_passwort}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=mysql:3306
+      - PHP_MEMORY_LIMIT=4096M
+      - PHP_UPLOAD_LIMIT=4096M
+      - APACHE_BODY_LIMIT=0
+    networks:
+      - netzwerk
+networks:
+  netzwerk:
+    name: ${netzwerk}
