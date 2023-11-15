@@ -1,0 +1,3 @@
+# Funktioniert noch nicht
+[system_default_sect]
+MinProtocol = TLSv1.2
