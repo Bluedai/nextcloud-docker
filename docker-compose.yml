@@ -56,6 +56,24 @@ services:
       - APACHE_BODY_LIMIT=0
     networks:
       - netzwerk
+  cronjob:
+    image: nextcloud
+    entrypoint: /cron.sh
+    restart: always
+    depends_on:
+      - mysql
+    volumes:
+      - ${ProjectVolumes}/nextcloud/html:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=${mysql_nextcloud_passwort}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=mysql:3306
+      - PHP_MEMORY_LIMIT=4096M
+      - PHP_UPLOAD_LIMIT=4096M
+      - APACHE_BODY_LIMIT=0
+    networks:
+      - netzwerk
 networks:
   netzwerk:
     name: ${netzwerk}
