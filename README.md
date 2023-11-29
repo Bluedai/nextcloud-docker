@@ -13,7 +13,7 @@ mysql skript ausführen um sourcen für das Image zu laden
 mysql dumpfile anpassen ( Passwort )
 anpassen nextcloud/html/config/config.php
 nginx nginx-certbot/data/nginx/app.conf anpassen
-
+admin > Grundeinstellungen > Hintergrundaufgaben auf Cronjob stellen
 ```
 
 # Update
